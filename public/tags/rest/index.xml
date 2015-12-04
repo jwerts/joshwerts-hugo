@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Rest on Josh Werts</title>
+    <link>http://localhost:1313/tags/rest/</link>
+    <description>Recent content in Rest on Josh Werts</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 10 Nov 2015 13:09:37 -0500</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/rest/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Feature Service applyEdits on Multiple Layers</title>
+      <link>http://localhost:1313/post/2015-11-10-feature-service-applyedits-on-multiple-layers/</link>
+      <pubDate>Tue, 10 Nov 2015 13:09:37 -0500</pubDate>
+      
+      <guid>http://localhost:1313/post/2015-11-10-feature-service-applyedits-on-multiple-layers/</guid>
+      <description>
+
+&lt;p&gt;If you&amp;rsquo;ve worked with any of the esri web API&amp;rsquo;s over the last several years, chances are you&amp;rsquo;ve used a Feature Service to edit an SDE feature class at some point.  Using the web API&amp;rsquo;s, the obvious way to do this would be to construct a &lt;a href=&#34;https://developers.arcgis.com/javascript/jsapi/featurelayer-amd.html&#34;&gt;FeatureLayer&lt;/a&gt; and call its &lt;a href=&#34;https://developers.arcgis.com/javascript/jsapi/featurelayer-amd.html#applyedits&#34;&gt;applyEdits&lt;/a&gt; method.  In reality, this is just a wrapper around the ArcGIS Server REST API&amp;rsquo;s applyEdits endpoint on an individual service layer.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Example:&lt;/em&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;http://[host]/arcgis/rest/services/[folder]/[service]/[layerid]/FeatureServer/applyEdits
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But what happens if you want to applyEdits to multiple layers within the Feature Service instead of just one layer?  You&amp;rsquo;ve got a few standard API options after constructing multiple feature layers:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Call applyEdits on each FeatureLayer with &lt;a href=&#34;https://dojotoolkit.org/api/?qs=1.10/dojo/promise/all&#34;&gt;dojo/promise/all&lt;/a&gt;:&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;// construct FeatureLayers
+flayer1 = new FeatureLayer(&amp;quot;http://MyServer/arcgis/rest/services/MyServiceFolder/MyService/0&amp;quot;);
+flayer2 = new FeatureLayer(&amp;quot;http://MyServer/arcgis/rest/services/MyServiceFolder/MyService/1&amp;quot;);
+
+// call applyEdits
+var deferred1 = flayer.applyEdits(adds1, deletes1, updates1);
+var deferred2 = flayer.applyEdits(adds2, deletes2, updates2);
+
+// use dojo/All to respond to success or failure when both operations finish
+all([deferred1, deferred2]).then(function(results) {
+  // Do something with results.
+  // Note that you&#39;ll still need to check each edit in each layer for &amp;quot;success&amp;quot;
+}, function(error) {
+  // uh oh, one of them failed.  
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Chain promises for each FeatureLayer:&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;// construct FeatureLayers
+flayer1 = new FeatureLayer(&amp;quot;http://MyServer/arcgis/rest/services/MyServiceFolder/MyService/0&amp;quot;);
+flayer2 = new FeatureLayer(&amp;quot;http://MyServer/arcgis/rest/services/MyServiceFolder/MyService/1&amp;quot;);
+
+// call applyEdits
+flayer.applyEdits(adds1, deletes1, updates1).then(function(result1) {
+  // do something with result
+  // Note that you&#39;ll still need to check each edit for &amp;quot;success&amp;quot;
+  flayer2.applyEdits(adds2, deletes2, updates2).then(function(result2) {
+    // do something with result
+    // Note that you&#39;ll still need to check each edit for &amp;quot;success&amp;quot;
+  }, function(error) {
+    // flayer 2 error
+  });
+}, function(error) {
+  // flayer 1 error
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Either of these options would work, but what if the 2 layer edits depended on each other?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Usually when I&amp;rsquo;m editing multiple layers at once, they have some sort of relation to each other.  This may or may not be defined in the database, but at any rate - if one edit fails, I&amp;rsquo;d really like the other edit to also fail so we don&amp;rsquo;t end up with an inconsistency in the database.  Additionally, wouldn&amp;rsquo;t it be nice to only send one request to the server, especially when there&amp;rsquo;s many layers?&lt;/p&gt;
+
+&lt;h3 id=&#34;one-request-to-rule-them-all:49c8eba68da4672c57330404ff0b31cc&#34;&gt;One Request to Rule Them All&lt;/h3&gt;
+
+&lt;p&gt;It turns out that the ArcGIS Server REST API also has an &lt;a href=&#34;http://resources.arcgis.com/en/help/rest/apiref/fsserviceedits.html&#34;&gt;applyEdits&lt;/a&gt; endpoint on the Feature Service itself - it&amp;rsquo;s just not wrapped in the web API&amp;rsquo;s.&lt;/p&gt;
+
+&lt;p&gt;This makes it possible to send multiple edits in a single request AND make sure nothing gets stored on any layers if any one of the layer edits fails.&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s nothing in the ESRI web API&amp;rsquo;s that directly hit this endpoint, so I give to you: FeatureService.js.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;bower install featureservice-esri-jsapi
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;usage:49c8eba68da4672c57330404ff0b31cc&#34;&gt;Usage:&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;var package_path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf(&#39;/&#39;));
+var dojoConfig = {
+  async: true,
+  packages: [
+    {
+      name: &#39;feature-service&#39;,
+      location: package_path + &#39;/js/lib/bower_components/featureservice-esri-jsapi/dist&#39;,
+      main: &#39;FeatureService.min&#39;
+    }
+  ]
+};
+
+require(
+  [
+    &#39;feature-service&#39;
+  ], function(FeatureService) {
+    &#39;use strict&#39;;
+
+    var service = new FeatureService(&amp;quot;http://[server]/arcgis/rest/MyService&amp;quot;);
+    var edits = [
+      {
+        id: 2,  // id of layer in service
+        adds: [
+          addGraphic
+        ],
+        updates: [
+          updateGraphic
+        ],
+        deletes: [
+          1, 2  // just objectids of features to delete.
+        ]
+      },
+      {
+        id: 5,  // id of layer in service
+        adds: [
+          someGraphic,
+          anotherGraphic,
+          yetAnotherGraphic
+        ]
+      }
+    ];
+
+    var deferred = service.applyEdits(edits);
+    deferred.then(function(result) {
+      // result is an array
+      // each array value contains an object with layer id and objectids of successful edits:
+      /*
+      [
+        {
+          id: int id of feature service layer
+          adds: [oid, oid, oid, ...],
+          updates: [oid, oid oid, ...],
+          deletes: [oid, oid, oid, ...]
+        },
+        ...
+      ]
+      */
+      // layer 2 results
+      console.log(result[0].id);
+      console.log(result[0].adds);
+      console.log(result[0].updates);
+      console.log(result[0].deletes);
+
+      // layer 5 results
+      console.log(result[1].id);
+      console.log(result[1].adds);
+      console.log(result[1].updates);
+      console.log(result[1].deletes);
+
+    }, function(error) {
+      /* error callback can be called for 2 reasons
+        1. Regular service faults (server 500 error, etc)
+        2. One or more of the edits failed (but server still responded with 200)
+
+        In case 1, the error is a standard esri error object with code and message.
+        In case 2, the error is an object with code (200) and message plus an additional
+        errors property which contains an array of error objects.
+        Error object contains code, description, and id (layer id).
+      */
+      // case 2
+      if (error.code === 200) {
+        for (var i; i&amp;lt;error.errors.length; i++) {
+          var err = error.errors[i];
+          console.log(err.id);
+          console.log(err.code);
+          console.log(err.description);
+        }
+      }
+    });
+});
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Currently only the applyEdits endpoint is implemented, but this is really the most useful.  There are a couple of personal design decisions here:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The service always sends rollbackOnFailure as true.  This seems to be the most likely use case.&lt;/li&gt;
+&lt;li&gt;If any single edit fails, the fault handler is triggered.  This is different from the jsapi&amp;rsquo;s FeatureLayer, where even if there&amp;rsquo;s a failure, it will still trigger the success handler and you have to check each result for failures.  This class does it for you.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If you find this useful, please leave a comment or feel free to fork!&lt;br /&gt;
+&lt;a href=&#34;https://github.com/jwerts/featureservice-esri-jsapi.git&#34;&gt;https://github.com/jwerts/featureservice-esri-jsapi.git&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;As a side note, this could have been a separate post on &lt;em&gt;&amp;ldquo;Unit testing esri Javascript API services with Karma/Mocha/Chai/Sinon&amp;rdquo;&lt;/em&gt;.  Perhaps in the future&amp;hellip;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Debugging Server Object Extensions (SOEs) in Style</title>
+      <link>http://localhost:1313/post/2015-04-12-debugging-server-object-extensions-soe-in-style/</link>
+      <pubDate>Sun, 12 Apr 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/post/2015-04-12-debugging-server-object-extensions-soe-in-style/</guid>
+      <description>
+
+&lt;p&gt;Server Object Extensions (SOEs) can be incredibly powerful, but they can also be a pain to debug.&lt;/p&gt;
+
+&lt;h4 id=&#34;typical-workflow:2143b7784ee121ce40ff096ceffe4741&#34;&gt;Typical workflow:&lt;/h4&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Rebuild solution&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;Open ArcGIS Manager in browser -&amp;gt; Site -&amp;gt; Extensions -&amp;gt; Update Extension by selecting .soe file.&lt;/li&gt;
+&lt;li&gt;Restart all of the services that depended on the SOE.&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;Attach Visual Studio to process.&lt;br /&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Steps 2 &amp;amp; 3 are the really annoying ones, but they can be automated!&lt;/p&gt;
+
+&lt;p&gt;It turns out this is really a post about REST and Python.&lt;/p&gt;
+
+&lt;p&gt;When you update an SOE through the ArcGIS Manager app (&lt;a href=&#34;http://localhost/arcgis/manager&#34;&gt;http://localhost/arcgis/manager&lt;/a&gt;), the web application is actually making calls to ArcGIS Server REST admin endpoints.&lt;/p&gt;
+
+&lt;h3 id=&#34;automate-with-python:2143b7784ee121ce40ff096ceffe4741&#34;&gt;Automate with Python&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;ll cut to the chase.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;See the full script here:&lt;/strong&gt;&lt;br /&gt;
+&lt;a href=&#34;https://github.com/jwerts/soe-updater&#34;&gt;https://github.com/jwerts/soe-updater&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Usage (simply run from command line after rebuilding SOE solution):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;C:\Projects\_General\_Code\soe-updater&amp;gt;python update_soe.py
+
+Retrieving token...
+Retrieved: oUK04q-J8ORWDUrSWGPfq8zAU29u3q5_YZ79ZvcFZx8kFneOMb5Z2Y2Yf19
+Uploading SOE...
+Uploaded: ibd792bae-a986-4861-8ac3-c16d42f4d610
+Updating SOE...
+Updated!
+Starting services...
+Starting service_folder/service.MapServer
+Started!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Your SOE will be updated and services restarted.  You can re-attach to the service processes or if you&amp;rsquo;re using &lt;code&gt;System.Diagnostics.Debugger.Launch();&lt;/code&gt; in your &lt;code&gt;Init()&lt;/code&gt; function, you&amp;rsquo;ll automatically be greeted with the dialog to attach your process once the script finishes and the services restart.&lt;/p&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;br/&gt;
+Now a little explanation of what&amp;rsquo;s going on&amp;hellip;&lt;/p&gt;
+
+&lt;h3 id=&#34;rest-api-calls:2143b7784ee121ce40ff096ceffe4741&#34;&gt;REST API Calls&lt;/h3&gt;
+
+&lt;h4 id=&#34;generate-token:2143b7784ee121ce40ff096ceffe4741&#34;&gt;Generate token&lt;/h4&gt;
+
+&lt;p&gt;Because we&amp;rsquo;re going to automate this, we need a preliminary step.  We&amp;rsquo;ll generate a token that can be passed to subsequent steps.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;http://localhost/arcgis/rest/tokens
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;upload-the-soe:2143b7784ee121ce40ff096ceffe4741&#34;&gt;Upload the SOE&lt;/h4&gt;
+
+&lt;p&gt;The .soe file that gets generated after building in Visual Studio is uploaded to ArcGIS Server and returns an itemID.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;http://localhost/arcgis/admin/uploads/upload
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;update-the-soe:2143b7784ee121ce40ff096ceffe4741&#34;&gt;Update the SOE&lt;/h4&gt;
+
+&lt;p&gt;Another call references the uploaded .soe through the itemID and updates the extension.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;http://localhost/arcgis/admin/services/types/extensions/update
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;restart-services:2143b7784ee121ce40ff096ceffe4741&#34;&gt;Restart services&lt;/h4&gt;
+
+&lt;p&gt;After the SOE is updated, all services that use it are stopped and must be restarted.  This can also be accomplished through REST calls:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;http://localhost/arcgis/admin/services/[service_folder]/[service_name]/start
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These calls are all pretty straightford to automate in a Python script using the requests library (&lt;a href=&#34;http://docs.python-requests.org/en/latest/&#34;&gt;http://docs.python-requests.org/en/latest/&lt;/a&gt;).&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

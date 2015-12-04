@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Closure on Josh Werts</title>
+    <link>http://localhost:1313/tags/closure/</link>
+    <description>Recent content in Closure on Josh Werts</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 28 Jun 2014 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/closure/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Python: Recursion with Lists</title>
+      <link>http://localhost:1313/post/2014-06-28-python-recursion-with-lists/</link>
+      <pubDate>Sat, 28 Jun 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/post/2014-06-28-python-recursion-with-lists/</guid>
+      <description>
+
+&lt;p&gt;I rarely find use cases for recursion in my every day work, but every once in a while, there&amp;rsquo;s a problem that comes up where I instantly think: &amp;ldquo;Recursion!&amp;rdquo; (typically followed by an equal mix of excitement and dread).&lt;/p&gt;
+
+&lt;p&gt;I often try to get away from GIS related programming when I&amp;rsquo;m not at work.  With limited free time, Python&amp;rsquo;s the perfect language to focus on fundamentals without getting bogged down with other concerns.&lt;/p&gt;
+
+&lt;p&gt;Recursion is challenging enough already but I find it even more difficult to wrap my head around when the end result is intended to be a list.  I love nested functions (and closure) in Python (as long as it doesn&amp;rsquo;t get out of hand) and think it works well in this case to provide the expected simple interface to a function despite the fact that recursion is being used internally.&lt;/p&gt;
+
+&lt;p&gt;Most of the code I write for work is proprietary and can&amp;rsquo;t be posted here, so here&amp;rsquo;s a classic problem I&amp;rsquo;ve been playing around with simply for learning purposes.&lt;/p&gt;
+
+&lt;h4 id=&#34;code:092771151d81b7b7fd50670c6e2e1500&#34;&gt;Code:&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def prime_factors(x):
+    &amp;quot;&amp;quot;&amp;quot; returns all prime factors of x
+    ex:  prime_factors(21) = [3,7]
+    ex:  prime_factors(24) = [2,2,2,3]
+    &amp;quot;&amp;quot;&amp;quot;
+
+    def get_first_prime(y):
+        &amp;quot;&amp;quot;&amp;quot; returns first prime of y &amp;quot;&amp;quot;&amp;quot;
+        # 0 and 1 are not prime, start with 2
+        i = 2
+
+        while i &amp;lt;= y:
+            if y % i == 0:
+                return i
+            i += 1
+
+    def get_primes(y, primes):
+        &amp;quot;&amp;quot;&amp;quot; Recursively appends primes of y
+            ex:  prime_factors(24) = [2,2,2,3]
+
+            24
+           /  \
+          2    12
+              /  \
+             2    6
+                 / \
+                2   3
+
+        Appends end nodes of tree as it recurses down.
+        &amp;quot;&amp;quot;&amp;quot;
+        first_prime = get_first_prime(y)
+        primes.append(first_prime)
+
+        if y == first_prime:
+            return
+
+        else:
+            # Number is not prime and can be divided further.
+            # Divide by the first prime (left node)
+            # to get the next test value (right node)
+            get_primes(y / first_prime, primes)
+
+
+    primes = []
+    if x &amp;gt;= 2:
+        get_primes(x, primes)
+
+    return primes
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;usage:092771151d81b7b7fd50670c6e2e1500&#34;&gt;Usage:&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;&amp;gt;&amp;gt;&amp;gt; prime_factors(24)
+[2, 2, 2, 3]
+&amp;gt;&amp;gt;&amp;gt; prime_factors(13595)
+[5, 7, 13, 29]
+&amp;gt;&amp;gt;&amp;gt; prime_factors(23049820394)
+[2, 89, 139, 181, 5147]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The list &lt;code&gt;primes&lt;/code&gt; is passed by reference into the recursive function and simply appended to throughout the operation to keep track of the values.  There is no actual return value from the function.&lt;/p&gt;
+
+&lt;p&gt;This could be difficult to follow if the end user used: &lt;code&gt;get_primes(y, primes) -&amp;gt; void&lt;/code&gt; directly but since it&amp;rsquo;s wrapped in a simpler interface:  &lt;code&gt;prime_factors(x) -&amp;gt; primes&lt;/code&gt;, the end result is a returned list as expected.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

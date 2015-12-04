@@ -1,0 +1,38 @@
+baseurl = "http://joshwerts.com"
+languageCode = "en-us"
+title = "Josh Werts"
+contentdir = "content"
+layoutdir = "layouts"
+publishdir = "public"
+disqusShortname = "jwerts"
+theme = "steam-josh"
+
+# color-codes for highlighting derived from this style
+pygmentsStyle = "monokai"
+# true: use pygments-css or false: color-codes directly
+pygmentsUseClasses = false
+
+
+
+[params]
+    name = "Josh Werts"
+    bio = "<p>Senior GIS Software Developer working remotely from Boone, NC for Patrick Engineering.  I do roughly equal portions of frontend web and backend ETL/service development primarily within the ESRI framework.  <br/><br/>I &#10084; Python!</p>"
+    title = "Somewhat Meaningful Lines of Code"
+    description = "some lines of code..."
+    location = "Boone, NC"
+    copyright = ""
+
+    # You can choose between green, orange, red and blue.
+  	themeColor = "green"
+
+  	# Enable Google Analytics be inserting your tracking code
+  	googleAnalytics = "UA-49518677-1"
+
+    github = "jwerts"
+    instagram = "joshwerts"
+
+    comments = "disqus"
+    keepReadingStr = "More..."
+    backtotopStr = "Back to top"
+    shareStr = "Share"
+    pageNotFoundTitle = "404 - Couldn't find this page!"

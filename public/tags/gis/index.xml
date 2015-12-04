@@ -1,0 +1,578 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Gis on Josh Werts</title>
+    <link>http://localhost:1313/tags/gis/</link>
+    <description>Recent content in Gis on Josh Werts</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 10 Nov 2015 13:09:37 -0500</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/gis/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Feature Service applyEdits on Multiple Layers</title>
+      <link>http://localhost:1313/post/2015-11-10-feature-service-applyedits-on-multiple-layers/</link>
+      <pubDate>Tue, 10 Nov 2015 13:09:37 -0500</pubDate>
+      
+      <guid>http://localhost:1313/post/2015-11-10-feature-service-applyedits-on-multiple-layers/</guid>
+      <description>
+
+&lt;p&gt;If you&amp;rsquo;ve worked with any of the esri web API&amp;rsquo;s over the last several years, chances are you&amp;rsquo;ve used a Feature Service to edit an SDE feature class at some point.  Using the web API&amp;rsquo;s, the obvious way to do this would be to construct a &lt;a href=&#34;https://developers.arcgis.com/javascript/jsapi/featurelayer-amd.html&#34;&gt;FeatureLayer&lt;/a&gt; and call its &lt;a href=&#34;https://developers.arcgis.com/javascript/jsapi/featurelayer-amd.html#applyedits&#34;&gt;applyEdits&lt;/a&gt; method.  In reality, this is just a wrapper around the ArcGIS Server REST API&amp;rsquo;s applyEdits endpoint on an individual service layer.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Example:&lt;/em&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;http://[host]/arcgis/rest/services/[folder]/[service]/[layerid]/FeatureServer/applyEdits
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But what happens if you want to applyEdits to multiple layers within the Feature Service instead of just one layer?  You&amp;rsquo;ve got a few standard API options after constructing multiple feature layers:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Call applyEdits on each FeatureLayer with &lt;a href=&#34;https://dojotoolkit.org/api/?qs=1.10/dojo/promise/all&#34;&gt;dojo/promise/all&lt;/a&gt;:&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;// construct FeatureLayers
+flayer1 = new FeatureLayer(&amp;quot;http://MyServer/arcgis/rest/services/MyServiceFolder/MyService/0&amp;quot;);
+flayer2 = new FeatureLayer(&amp;quot;http://MyServer/arcgis/rest/services/MyServiceFolder/MyService/1&amp;quot;);
+
+// call applyEdits
+var deferred1 = flayer.applyEdits(adds1, deletes1, updates1);
+var deferred2 = flayer.applyEdits(adds2, deletes2, updates2);
+
+// use dojo/All to respond to success or failure when both operations finish
+all([deferred1, deferred2]).then(function(results) {
+  // Do something with results.
+  // Note that you&#39;ll still need to check each edit in each layer for &amp;quot;success&amp;quot;
+}, function(error) {
+  // uh oh, one of them failed.  
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Chain promises for each FeatureLayer:&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;// construct FeatureLayers
+flayer1 = new FeatureLayer(&amp;quot;http://MyServer/arcgis/rest/services/MyServiceFolder/MyService/0&amp;quot;);
+flayer2 = new FeatureLayer(&amp;quot;http://MyServer/arcgis/rest/services/MyServiceFolder/MyService/1&amp;quot;);
+
+// call applyEdits
+flayer.applyEdits(adds1, deletes1, updates1).then(function(result1) {
+  // do something with result
+  // Note that you&#39;ll still need to check each edit for &amp;quot;success&amp;quot;
+  flayer2.applyEdits(adds2, deletes2, updates2).then(function(result2) {
+    // do something with result
+    // Note that you&#39;ll still need to check each edit for &amp;quot;success&amp;quot;
+  }, function(error) {
+    // flayer 2 error
+  });
+}, function(error) {
+  // flayer 1 error
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Either of these options would work, but what if the 2 layer edits depended on each other?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Usually when I&amp;rsquo;m editing multiple layers at once, they have some sort of relation to each other.  This may or may not be defined in the database, but at any rate - if one edit fails, I&amp;rsquo;d really like the other edit to also fail so we don&amp;rsquo;t end up with an inconsistency in the database.  Additionally, wouldn&amp;rsquo;t it be nice to only send one request to the server, especially when there&amp;rsquo;s many layers?&lt;/p&gt;
+
+&lt;h3 id=&#34;one-request-to-rule-them-all:49c8eba68da4672c57330404ff0b31cc&#34;&gt;One Request to Rule Them All&lt;/h3&gt;
+
+&lt;p&gt;It turns out that the ArcGIS Server REST API also has an &lt;a href=&#34;http://resources.arcgis.com/en/help/rest/apiref/fsserviceedits.html&#34;&gt;applyEdits&lt;/a&gt; endpoint on the Feature Service itself - it&amp;rsquo;s just not wrapped in the web API&amp;rsquo;s.&lt;/p&gt;
+
+&lt;p&gt;This makes it possible to send multiple edits in a single request AND make sure nothing gets stored on any layers if any one of the layer edits fails.&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s nothing in the ESRI web API&amp;rsquo;s that directly hit this endpoint, so I give to you: FeatureService.js.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;bower install featureservice-esri-jsapi
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;usage:49c8eba68da4672c57330404ff0b31cc&#34;&gt;Usage:&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;var package_path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf(&#39;/&#39;));
+var dojoConfig = {
+  async: true,
+  packages: [
+    {
+      name: &#39;feature-service&#39;,
+      location: package_path + &#39;/js/lib/bower_components/featureservice-esri-jsapi/dist&#39;,
+      main: &#39;FeatureService.min&#39;
+    }
+  ]
+};
+
+require(
+  [
+    &#39;feature-service&#39;
+  ], function(FeatureService) {
+    &#39;use strict&#39;;
+
+    var service = new FeatureService(&amp;quot;http://[server]/arcgis/rest/MyService&amp;quot;);
+    var edits = [
+      {
+        id: 2,  // id of layer in service
+        adds: [
+          addGraphic
+        ],
+        updates: [
+          updateGraphic
+        ],
+        deletes: [
+          1, 2  // just objectids of features to delete.
+        ]
+      },
+      {
+        id: 5,  // id of layer in service
+        adds: [
+          someGraphic,
+          anotherGraphic,
+          yetAnotherGraphic
+        ]
+      }
+    ];
+
+    var deferred = service.applyEdits(edits);
+    deferred.then(function(result) {
+      // result is an array
+      // each array value contains an object with layer id and objectids of successful edits:
+      /*
+      [
+        {
+          id: int id of feature service layer
+          adds: [oid, oid, oid, ...],
+          updates: [oid, oid oid, ...],
+          deletes: [oid, oid, oid, ...]
+        },
+        ...
+      ]
+      */
+      // layer 2 results
+      console.log(result[0].id);
+      console.log(result[0].adds);
+      console.log(result[0].updates);
+      console.log(result[0].deletes);
+
+      // layer 5 results
+      console.log(result[1].id);
+      console.log(result[1].adds);
+      console.log(result[1].updates);
+      console.log(result[1].deletes);
+
+    }, function(error) {
+      /* error callback can be called for 2 reasons
+        1. Regular service faults (server 500 error, etc)
+        2. One or more of the edits failed (but server still responded with 200)
+
+        In case 1, the error is a standard esri error object with code and message.
+        In case 2, the error is an object with code (200) and message plus an additional
+        errors property which contains an array of error objects.
+        Error object contains code, description, and id (layer id).
+      */
+      // case 2
+      if (error.code === 200) {
+        for (var i; i&amp;lt;error.errors.length; i++) {
+          var err = error.errors[i];
+          console.log(err.id);
+          console.log(err.code);
+          console.log(err.description);
+        }
+      }
+    });
+});
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Currently only the applyEdits endpoint is implemented, but this is really the most useful.  There are a couple of personal design decisions here:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The service always sends rollbackOnFailure as true.  This seems to be the most likely use case.&lt;/li&gt;
+&lt;li&gt;If any single edit fails, the fault handler is triggered.  This is different from the jsapi&amp;rsquo;s FeatureLayer, where even if there&amp;rsquo;s a failure, it will still trigger the success handler and you have to check each result for failures.  This class does it for you.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If you find this useful, please leave a comment or feel free to fork!&lt;br /&gt;
+&lt;a href=&#34;https://github.com/jwerts/featureservice-esri-jsapi.git&#34;&gt;https://github.com/jwerts/featureservice-esri-jsapi.git&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;As a side note, this could have been a separate post on &lt;em&gt;&amp;ldquo;Unit testing esri Javascript API services with Karma/Mocha/Chai/Sinon&amp;rdquo;&lt;/em&gt;.  Perhaps in the future&amp;hellip;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>arcpy.Project in_memory Featureclass</title>
+      <link>http://localhost:1313/post/2015-09-10-arcpy-dot-project-in-memory-featureclass/</link>
+      <pubDate>Thu, 10 Sep 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/post/2015-09-10-arcpy-dot-project-in-memory-featureclass/</guid>
+      <description>&lt;p&gt;It&amp;rsquo;s inevitable that you eventually run into this error when scripting with arcpy (arcpy.Project_management):
+&lt;a href=&#34;http://help.arcgis.com/en%20/arcgisdesktop/10.0/help/index.html#//00vp0000000m000944.htm&#34;&gt;http://help.arcgis.com/en%20/arcgisdesktop/10.0/help/index.html#//00vp0000000m000944.htm&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;The standard project tool does not support in_memory workspaces.&lt;/p&gt;
+
+&lt;p&gt;Here&amp;rsquo;s the workaround - we just create a new featureclass using the source featureclass as a template and then exploit the spatial_reference parameter of arcpy.da.SearchCursor to project on the fly while inserting into the new featureclass.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;from os.path import split
+
+import arcpy
+
+# ....
+# assume we&#39;ve already created this somewhere
+source_fc = r&amp;quot;in_memory/source_fc&amp;quot;
+
+# destination featureclass to be created
+projected_fc = r&amp;quot;in_memory/projected_source_fc&amp;quot;
+
+# destination projection
+web_mercator = arcpy.SpatialReference(102100)
+
+# create destination feature class using the source as a template to establish schema
+# and set destination spatial reference
+path, name = split(projected_fc)
+arcpy.management.CreateFeatureclass(path, name, &#39;POLYLINE&#39;,
+                                    template=source_fc,
+                                    spatial_reference=web_mercator)
+
+# specify copy of all fields from source to destination
+fields = [&amp;quot;Shape@&amp;quot;] + [f.name for f in arcpy.ListFields(source_fc) if not f.required]
+
+# project source geometries on the fly while inserting to destination featureclass
+with arcpy.da.SearchCursor(source_fc, fields, spatial_reference=web_mercator) as source_curs, \
+     arcpy.da.InsertCursor(projected_fc, fields) as ins_curs:
+    for row in source_curs:
+      ins_curs.insertRow(row)
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Debugging Server Object Extensions (SOEs) in Style</title>
+      <link>http://localhost:1313/post/2015-04-12-debugging-server-object-extensions-soe-in-style/</link>
+      <pubDate>Sun, 12 Apr 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/post/2015-04-12-debugging-server-object-extensions-soe-in-style/</guid>
+      <description>
+
+&lt;p&gt;Server Object Extensions (SOEs) can be incredibly powerful, but they can also be a pain to debug.&lt;/p&gt;
+
+&lt;h4 id=&#34;typical-workflow:2143b7784ee121ce40ff096ceffe4741&#34;&gt;Typical workflow:&lt;/h4&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Rebuild solution&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;Open ArcGIS Manager in browser -&amp;gt; Site -&amp;gt; Extensions -&amp;gt; Update Extension by selecting .soe file.&lt;/li&gt;
+&lt;li&gt;Restart all of the services that depended on the SOE.&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;Attach Visual Studio to process.&lt;br /&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Steps 2 &amp;amp; 3 are the really annoying ones, but they can be automated!&lt;/p&gt;
+
+&lt;p&gt;It turns out this is really a post about REST and Python.&lt;/p&gt;
+
+&lt;p&gt;When you update an SOE through the ArcGIS Manager app (&lt;a href=&#34;http://localhost/arcgis/manager&#34;&gt;http://localhost/arcgis/manager&lt;/a&gt;), the web application is actually making calls to ArcGIS Server REST admin endpoints.&lt;/p&gt;
+
+&lt;h3 id=&#34;automate-with-python:2143b7784ee121ce40ff096ceffe4741&#34;&gt;Automate with Python&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;ll cut to the chase.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;See the full script here:&lt;/strong&gt;&lt;br /&gt;
+&lt;a href=&#34;https://github.com/jwerts/soe-updater&#34;&gt;https://github.com/jwerts/soe-updater&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Usage (simply run from command line after rebuilding SOE solution):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;C:\Projects\_General\_Code\soe-updater&amp;gt;python update_soe.py
+
+Retrieving token...
+Retrieved: oUK04q-J8ORWDUrSWGPfq8zAU29u3q5_YZ79ZvcFZx8kFneOMb5Z2Y2Yf19
+Uploading SOE...
+Uploaded: ibd792bae-a986-4861-8ac3-c16d42f4d610
+Updating SOE...
+Updated!
+Starting services...
+Starting service_folder/service.MapServer
+Started!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Your SOE will be updated and services restarted.  You can re-attach to the service processes or if you&amp;rsquo;re using &lt;code&gt;System.Diagnostics.Debugger.Launch();&lt;/code&gt; in your &lt;code&gt;Init()&lt;/code&gt; function, you&amp;rsquo;ll automatically be greeted with the dialog to attach your process once the script finishes and the services restart.&lt;/p&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;br/&gt;
+Now a little explanation of what&amp;rsquo;s going on&amp;hellip;&lt;/p&gt;
+
+&lt;h3 id=&#34;rest-api-calls:2143b7784ee121ce40ff096ceffe4741&#34;&gt;REST API Calls&lt;/h3&gt;
+
+&lt;h4 id=&#34;generate-token:2143b7784ee121ce40ff096ceffe4741&#34;&gt;Generate token&lt;/h4&gt;
+
+&lt;p&gt;Because we&amp;rsquo;re going to automate this, we need a preliminary step.  We&amp;rsquo;ll generate a token that can be passed to subsequent steps.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;http://localhost/arcgis/rest/tokens
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;upload-the-soe:2143b7784ee121ce40ff096ceffe4741&#34;&gt;Upload the SOE&lt;/h4&gt;
+
+&lt;p&gt;The .soe file that gets generated after building in Visual Studio is uploaded to ArcGIS Server and returns an itemID.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;http://localhost/arcgis/admin/uploads/upload
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;update-the-soe:2143b7784ee121ce40ff096ceffe4741&#34;&gt;Update the SOE&lt;/h4&gt;
+
+&lt;p&gt;Another call references the uploaded .soe through the itemID and updates the extension.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;http://localhost/arcgis/admin/services/types/extensions/update
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;restart-services:2143b7784ee121ce40ff096ceffe4741&#34;&gt;Restart services&lt;/h4&gt;
+
+&lt;p&gt;After the SOE is updated, all services that use it are stopped and must be restarted.  This can also be accomplished through REST calls:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;http://localhost/arcgis/admin/services/[service_folder]/[service_name]/start
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These calls are all pretty straightford to automate in a Python script using the requests library (&lt;a href=&#34;http://docs.python-requests.org/en/latest/&#34;&gt;http://docs.python-requests.org/en/latest/&lt;/a&gt;).&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>arcpy.da Cursors and Readability Part 2</title>
+      <link>http://localhost:1313/post/2014-12-21-arcpy-dot-da-cursors-and-readability-part-2/</link>
+      <pubDate>Sun, 21 Dec 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/post/2014-12-21-arcpy-dot-da-cursors-and-readability-part-2/</guid>
+      <description>
+
+&lt;p&gt;arcpy.da cursors provide the simplest data structure by default (tuples).  Python generators provide a pretty neat way of customizing these cursors to increase readability.&lt;/p&gt;
+
+&lt;h3 id=&#34;searchcursor:ab62167d7f5279dad4a62ae177204a76&#34;&gt;SearchCursor:&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;Return &lt;code&gt;dict&lt;/code&gt; instead of tuple:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def rows_as_dicts(cursor):
+  &amp;quot;&amp;quot;&amp;quot; returns rows as dicts (does not maintain field order) &amp;quot;&amp;quot;&amp;quot;
+  colnames = cursor.fields
+  for row in cursor:
+    yield dict(zip(colnames, row))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Usage&lt;/strong&gt; (note the cursor is wrapped with the generator):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;total_cost_by_name = {}
+with arcpy.da.SearchCursor(costs_table, [&amp;quot;name&amp;quot;, &amp;quot;unit_cost&amp;quot;, &amp;quot;quantity&amp;quot;]) as curs:
+  for row in rows_as_dicts(curs):
+    total_cost_by_name[row[&amp;quot;name&amp;quot;]] = row[&amp;quot;unit_cost&amp;quot;] * row[&amp;quot;quantity&amp;quot;]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If using with an update cursor, you&amp;rsquo;ll want to use an OrderedDict so the field/value order is maintained.  You&amp;rsquo;ll also need to the use &lt;code&gt;dict.values()&lt;/code&gt; to pass an ordered tuple back into Cursor.updateRow.&lt;/p&gt;
+
+&lt;h3 id=&#34;updatecursor:ab62167d7f5279dad4a62ae177204a76&#34;&gt;UpdateCursor:&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;Return &lt;code&gt;collections.OrderedDict&lt;/code&gt; instead of tuple:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;import collections
+def rows_as_ordered_dicts(cursor):
+  &amp;quot;&amp;quot;&amp;quot; returns rows as collections.OrderedDict &amp;quot;&amp;quot;&amp;quot;
+  colnames = cursor.fields
+  for row in cursor:
+    yield collections.OrderedDict(zip(colnames, row))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Usage&lt;/strong&gt; (updating):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;with arcpy.da.UpdateCursor(costs_table, [&amp;quot;unit_cost&amp;quot;, &amp;quot;quantity&amp;quot;, &amp;quot;total_cost&amp;quot;]) as curs:
+  for row in rows_as_ordered_dicts(curs):
+    row[&amp;quot;total_cost&amp;quot;] = row[&amp;quot;unit_cost&amp;quot;] * row[&amp;quot;quantity&amp;quot;]
+
+    # call .values() to convert back to tuple
+    # if we didn&#39;t use OrderedDict, the values would be in random order.
+    curs.updateRow( row.values() )
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>arcpy.da Cursors and Readability Part 1</title>
+      <link>http://localhost:1313/post/2014-08-07-arcpy-dot-da-cursors/</link>
+      <pubDate>Thu, 07 Aug 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/post/2014-08-07-arcpy-dot-da-cursors/</guid>
+      <description>
+
+&lt;p&gt;The arcpy.da cursors (ie: arcpy.da.SearchCursor) are far and away better than the regular cursors (ie: arcpy.SearchCursor).  They&amp;rsquo;re more pythonic, incredibly flexible, faster, and allow context management (with).  However, their straight-out-of-the-box-use may be a little hard to read and maintain.&lt;/p&gt;
+
+&lt;h3 id=&#34;fun-with-tuples:dc138d3f5428a0342b5c02b02f9dbdd9&#34;&gt;Fun with Tuples&lt;/h3&gt;
+
+&lt;p&gt;arcpy.da cursors return tuples (instead of objects that feel too much like writing ArcObjects).&lt;/p&gt;
+
+&lt;h4 id=&#34;good:dc138d3f5428a0342b5c02b02f9dbdd9&#34;&gt;Good:&lt;/h4&gt;
+
+&lt;p&gt;It&amp;rsquo;s perfectly valid to use tuple indexes to access the fields:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;total_cost_by_name = {}
+with arcpy.da.SearchCursor(costs_table, [&amp;quot;name&amp;quot;, &amp;quot;unit_cost&amp;quot;, &amp;quot;quantity&amp;quot;]) as curs:
+    for row in curs:
+        total_cost_by_name[row[0]] = row[1] * row[2]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;better:dc138d3f5428a0342b5c02b02f9dbdd9&#34;&gt;Better:&lt;/h4&gt;
+
+&lt;p&gt;This works fine, but the intent of our calculation is not really clear without some mental mapping.  How about this?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;total_cost_by_name = {}
+with arcpy.da.SearchCursor(costs_table, [&amp;quot;name&amp;quot;, &amp;quot;unit_cost&amp;quot;, &amp;quot;quantity&amp;quot;]) as curs:
+    for row in curs:
+        name = row[0]
+        unit_cost = row[1]
+        quantity = row[2]
+
+        total_cost_by_name[name] = unit_cost * quantity
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The intent in the calculation is much more clear here, but we&amp;rsquo;ve gained a lot of verbosity that is perhaps unnecessary.&lt;/p&gt;
+
+&lt;h4 id=&#34;best:dc138d3f5428a0342b5c02b02f9dbdd9&#34;&gt;Best:&lt;/h4&gt;
+
+&lt;p&gt;Of course, you could set the variables all on one line &lt;code&gt;name, unit_cost, quantity = row[0], row[1], row[2]&lt;/code&gt;, but even better would be to take advantage of python&amp;rsquo;s tuple unpacking:  &lt;code&gt;name, unit_cost, quantity = row&lt;/code&gt;.  Taking that one step further, why not unpack every tuple as it&amp;rsquo;s iterated over.  Now we have a process that is both concise and highly readable:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;total_cost_by_name = {}
+with arcpy.da.SearchCursor(costs_table, [&amp;quot;name&amp;quot;, &amp;quot;unit_cost&amp;quot;, &amp;quot;quantity&amp;quot;]) as curs:
+    for name, unit_cost, quantity in curs:
+        total_cost_by_name[name] = unit_cost * quantity
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now what if we want to update a total cost field in the featureclass using an UpdateCursor instead?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;with arcpy.da.UpdateCursor(costs_table, [&amp;quot;unit_cost&amp;quot;, &amp;quot;quantity&amp;quot;, &amp;quot;total_cost&amp;quot;]) as curs:
+    for unit_cost, quantity, total_cost in curs:
+        total_cost = unit_cost * quantity
+        curs.updateRow( (unit_cost, quantity, total_cost) )
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>arcpy: Reorder Fields</title>
+      <link>http://localhost:1313/post/2014-04-17-arcpy-reorder-fields/</link>
+      <pubDate>Thu, 17 Apr 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://localhost:1313/post/2014-04-17-arcpy-reorder-fields/</guid>
+      <description>&lt;p&gt;Here&amp;rsquo;s another handy function for re-ordering fields in a feature class.  Like the &lt;code&gt;rename_fields&lt;/code&gt; function previously posted, it recreates the existing field mappings and modifies as necessary.  The output is a new feature class with fields in the order specified.&lt;/p&gt;
+
+&lt;p&gt;The only caveat is that required fields always get pushed to the front (so the featureclass will start with OBJECTID, Shape, rest of fields&amp;hellip;).  After required fields are out of the way, the rest of the fields are added in the order specified in the &lt;code&gt;field_order&lt;/code&gt; list.  If any fields are missing, they are added to the end of the feature class.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;import arcpy
+
+def reorder_fields(table, out_table, field_order, add_missing=True):
+    &amp;quot;&amp;quot;&amp;quot;
+    Reorders fields in input featureclass/table
+    :table:         input table (fc, table, layer, etc)
+    :out_table:     output table (fc, table, layer, etc)
+    :field_order:   order of fields (objectid, shape not necessary)
+    :add_missing:   add missing fields to end if True (leave out if False)
+    -&amp;gt; path to output table
+    &amp;quot;&amp;quot;&amp;quot;
+    existing_fields = arcpy.ListFields(table)
+    existing_field_names = [field.name for field in existing_fields]
+
+    existing_mapping = arcpy.FieldMappings()
+    existing_mapping.addTable(table)
+
+    new_mapping = arcpy.FieldMappings()
+
+    def add_mapping(field_name):
+        mapping_index = existing_mapping.findFieldMapIndex(field_name)
+
+        # required fields (OBJECTID, etc) will not be in existing mappings
+        # they are added automatically
+        if mapping_index != -1:
+            field_map = existing_mapping.fieldMappings[mapping_index]
+            new_mapping.addFieldMap(field_map)
+
+    # add user fields from field_order
+    for field_name in field_order:
+        if field_name not in existing_field_names:
+            raise Exception(&amp;quot;Field: {0} not in {1}&amp;quot;.format(field_name, table))
+
+        add_mapping(field_name)
+
+    # add missing fields at end
+    if add_missing:
+        missing_fields = [f for f in existing_field_names if f not in field_order]
+        for field_name in missing_fields:
+            add_mapping(field_name)
+
+    # use merge with single input just to use new field_mappings
+    arcpy.Merge_management(table, out_table, new_mapping)
+    return out_table
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Usage:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;new_field_order = [&amp;quot;field2&amp;quot;, &amp;quot;field3&amp;quot;, &amp;quot;field1&amp;quot;]
+reorder_fields(in_fc, out_fc, new_field_order)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I&amp;rsquo;ve tested this in 10.1.1+ - it may work in 10.0 as well and should work with any license level.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>arcpy: Rename Fields</title>
+      <link>http://localhost:1313/post/2014-04-01-arcpy-rename-fields/</link>
+      <pubDate>Tue, 01 Apr 2014 07:43:15 -0400</pubDate>
+      
+      <guid>http://localhost:1313/post/2014-04-01-arcpy-rename-fields/</guid>
+      <description>&lt;p&gt;In ArcMap 10.2.1, esri finally added a tool to allow renaming of fields (Data Management -&amp;gt; Alter Field).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://localhost:1313/img/alter_field_tool.png&#34; alt=&#34;Alter Field&#34; /&gt;
+&lt;/p&gt;
+
+&lt;p&gt;This works well for a single field, but you may need something different if:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;you&amp;rsquo;re still on 10.0/10.1,&lt;/li&gt;
+&lt;li&gt;you want to rename several fields at once,&lt;/li&gt;
+&lt;li&gt;you would prefer not to rename the fields in-place,&lt;/li&gt;
+&lt;li&gt;you need to rename fields in a source unsupported by the Alter Field tool (hint: shapefiles).&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Here&amp;rsquo;s a great function for renaming fields (and maintaining their order).  It can be used in the python console.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def rename_fields(table, out_table, new_name_by_old_name):
+    &amp;quot;&amp;quot;&amp;quot; Renames specified fields in input feature class/table
+    :table:                 input table (fc, table, layer, etc)
+    :out_table:             output table (fc, table, layer, etc)
+    :new_name_by_old_name:  {&#39;old_field_name&#39;:&#39;new_field_name&#39;,...}
+    -&amp;gt;  out_table
+    &amp;quot;&amp;quot;&amp;quot;
+    existing_field_names = [field.name for field in arcpy.ListFields(table)]
+
+    field_mappings = arcpy.FieldMappings()
+    field_mappings.addTable(table)
+
+    for old_field_name, new_field_name in new_name_by_old_name.iteritems():
+        if old_field_name not in existing_field_names:
+            message = &amp;quot;Field: {0} not in {1}&amp;quot;.format(old_field_name, table)
+            raise Exception(message)
+
+        mapping_index = field_mappings.findFieldMapIndex(old_field_name)
+        field_map = field_mappings.fieldMappings[mapping_index]
+        output_field = field_map.outputField
+        output_field.name = new_field_name
+        output_field.aliasName = new_field_name
+        field_map.outputField = output_field
+        field_mappings.replaceFieldMap(mapping_index, field_map)
+
+    # use merge with single input just to use new field_mappings
+    arcpy.Merge_management(table, out_table, field_mappings)
+    return out_table
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The function accepts the input feature class, path to output, and a dictionary mapping the old names to the new names:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Usage:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;# does need need to include all fields, only those you want to rename
+new_name_by_old_name = { &#39;old_name_1&#39;:&#39;new_name_1&#39;,
+                         &#39;old_name_2&#39;:&#39;new_name_2&#39; }
+rename_fields(in_fc, renamed_fc, new_name_by_old_name)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This works by duplicating the arcpy.FieldMappings object from the existing feature class, renaming the fields within the mapping based on the input, and then calling a function that will apply that mapping.  Merge with a single input gets the job done.  Using the field mappings is a nice trick for efficiently managing fields.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
