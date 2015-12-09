@@ -4,8 +4,13 @@ draft = false
 title = "About"
 menu = "main"
 description = "About Me"
+comments = false
 +++
 
-Senior GIS Software Developer working remotely from Boone, NC for Patrick Engineering. I do roughly equal portions of frontend web and backend ETL/service development primarily within the ESRI framework.  
+**Senior GIS Software Developer working remotely from Boone, NC for Patrick Engineering.**  
+
+I entered software development from a diverse background of civil engineering, land surveying and forestry (GIS emphasis). Other than a few fundamental programming courses taken during my Masters degree, I'm a self-taught developer. In a constantly changing field, I see this as an advantage. I'm passionate about software (especially GIS/spatial/mapping) and truly driven by learning.  
+
+I enjoy working with open source technologies though I'm highly proficient in all things ESRI. I prefer to work in multiple languages and constantly learn new ones, but my day to day work is typically full-stack web development in JavaScript, Python, and C#.  I'm searching for a project to learn Go!
 
 <a href="mailto:joshwerts@gmail.com">joshwerts@gmail.com</a>

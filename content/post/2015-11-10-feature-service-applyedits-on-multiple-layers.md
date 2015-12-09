@@ -24,7 +24,7 @@ http://[host]/arcgis/rest/services/[folder]/[service]/[layerid]/FeatureServer/ap
 
 But what happens if you want to applyEdits to multiple layers within the Feature Service instead of just one layer?  You've got a few standard API options after constructing multiple feature layers:
 
-- Call applyEdits on each FeatureLayer with <a href="https://dojotoolkit.org/api/?qs=1.10/dojo/promise/all">dojo/promise/all</a>:
+*Call applyEdits on each FeatureLayer with <a href="https://dojotoolkit.org/api/?qs=1.10/dojo/promise/all">dojo/promise/all</a>:*  
 
 ```js
 // construct FeatureLayers
@@ -44,7 +44,7 @@ all([deferred1, deferred2]).then(function(results) {
 });
 ```
 
-- Chain promises for each FeatureLayer:
+*Chain promises for each FeatureLayer:*    
 
 ```js
 // construct FeatureLayers
