@@ -5,17 +5,12 @@ contentdir = "content"
 layoutdir = "layouts"
 publishdir = "public"
 disqusShortname = "jwerts"
-theme = "steam-josh"
+theme = "hasamap"
+canonifyurls = true
 
-# color-codes for highlighting derived from this style
-pygmentsStyle = "monokai"
-# true: use pygments-css or false: color-codes directly
-pygmentsUseClasses = false
-
+# match Octopress
 [permalinks]
     post = "/blog/:year/:month/:day/:title/"
-
-
 
 [params]
     name = "Josh Werts"
@@ -26,9 +21,6 @@ pygmentsUseClasses = false
     location = "Boone, NC"
     mapLatLong = "36.216795,-81.674552"
     copyright = "All Rights Reserved"
-
-    # You can choose between green, orange, red and blue.
-  	themeColor = "blue"
 
   	# Enable Google Analytics be inserting your tracking code
   	googleAnalytics = "UA-49518677-1"

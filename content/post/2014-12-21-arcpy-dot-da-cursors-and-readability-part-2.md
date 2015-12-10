@@ -12,6 +12,7 @@ tags = [
   "esri"
 ]
 description = "Part 2 of 2 part series on advanced usage of arcpy.da Cursors"
+url = "blog/2014/12/21/arcpy-dot-da-cursors-and-readability-part-2/"
 +++
 
 arcpy.da cursors provide the simplest data structure by default (tuples).  Python generators provide a pretty neat way of customizing these cursors to increase readability.

@@ -1,10 +1,9 @@
 +++
-date = "2013-01-01"
+date = "0001-01-01"
 draft = false
 title = "About"
 menu = "main"
 description = "About Me"
-comments = false
 +++
 
 **Senior GIS Software Developer working remotely from Boone, NC for Patrick Engineering.**  

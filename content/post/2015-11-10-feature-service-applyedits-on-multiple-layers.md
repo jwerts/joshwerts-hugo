@@ -12,6 +12,7 @@ tags = [
   "esri"
 ]
 description = "Javascript wrapper for applying edits to multiple layers on a feature service in single request to FeatureService REST API endpoint"
+url = "blog/2015/11/10/feature-service-applyedits-on-multiple-layers/"
 +++
 
 If you've worked with any of the esri web API's over the last several years, chances are you've used a Feature Service to edit an SDE feature class at some point.  Using the web API's, the obvious way to do this would be to construct a <a href="https://developers.arcgis.com/javascript/jsapi/featurelayer-amd.html">FeatureLayer</a> and call its <a href="https://developers.arcgis.com/javascript/jsapi/featurelayer-amd.html#applyedits">applyEdits</a> method.  In reality, this is just a wrapper around the ArcGIS Server REST API's applyEdits endpoint on an individual service layer.  

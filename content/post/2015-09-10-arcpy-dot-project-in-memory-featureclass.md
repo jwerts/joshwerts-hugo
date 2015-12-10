@@ -12,6 +12,7 @@ tags = [
   "esri"
 ]
 description = "Useful workaround for projecting a feature class in_memory using arcpy"
+url = "/blog/2015/09/10/arcpy-dot-project-in-memory-featureclass"
 +++
 
 It's inevitable that you eventually run into this error when scripting with arcpy (arcpy.Project_management):

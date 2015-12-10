@@ -17,6 +17,7 @@ tags = [
   "gis"
 ]
 description = "Utilize Python, requests, and the ArcGIS Server Admin REST API to make SOE debugging easier"
+url = "blog/2015/04/12/debugging-server-object-extensions-soe-in-style/"
 +++
 
 Server Object Extensions (SOEs) can be incredibly powerful, but they can also be a pain to debug.

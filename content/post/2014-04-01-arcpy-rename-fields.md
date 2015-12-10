@@ -11,6 +11,7 @@ tags = [
   "esri"
 ]
 description = "Simple yet powerful function for renaming fields in a feature class with arcpy"
+url = "blog/2014/04/01/arcpy-rename-fields/"
 +++
 
 In ArcMap 10.2.1, esri finally added a tool to allow renaming of fields (Data Management -> Alter Field).  

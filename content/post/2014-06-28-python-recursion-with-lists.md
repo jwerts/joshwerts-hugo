@@ -10,6 +10,7 @@ tags = [
   "closure"
 ]
 description = "Fun with recursion in Python - standard problem to test returning a list from a recursive function with closure"
+url = "blog/2014/06/28/python-recursion-with-lists/"
 +++
 
 I rarely find use cases for recursion in my every day work, but every once in a while, there's a problem that comes up where I instantly think: "Recursion!" (typically followed by an equal mix of excitement and dread).

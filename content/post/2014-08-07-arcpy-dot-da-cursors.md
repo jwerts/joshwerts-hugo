@@ -12,6 +12,7 @@ tags = [
   "esri"
 ]
 description = "Part 1 of 2 part series on advanced usage of arcpy.da Cursors"
+url = "/blog/2014/08/07/arcpy-dot-da-cursors/"
 +++
 
 The arcpy.da cursors (ie: arcpy.da.SearchCursor) are far and away better than the regular cursors (ie: arcpy.SearchCursor).  They're more pythonic, incredibly flexible, faster, and allow context management (with).  However, their straight-out-of-the-box-use may be a little hard to read and maintain.
