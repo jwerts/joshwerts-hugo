@@ -1,0 +1,3 @@
+[submodule "public"]
+	path = public
+	url = https://github.com/jwerts/jwerts.github.io.git

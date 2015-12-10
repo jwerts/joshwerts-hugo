@@ -1,4 +1,4 @@
-baseurl = "http://joshwerts.com"
+baseurl = "http://joshwerts.com/"
 languageCode = "en-us"
 title = "Josh Werts"
 contentdir = "content"
@@ -6,7 +6,7 @@ layoutdir = "layouts"
 publishdir = "public"
 disqusShortname = "jwerts"
 theme = "hasamap"
-canonifyurls = true
+canonifyUrls = true
 
 # match Octopress
 [permalinks]
