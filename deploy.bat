@@ -13,8 +13,8 @@ rem add all changes
 git add -A
 
 rem commit the changes
-rem TODO add a date to commit message
-git commit -m "updated site"
+set mydate=!date:~10,4!!date:~6,2!/!date:~4,2!
+git commit -m "updated site %mydate%"
 
 git push origin master
 
