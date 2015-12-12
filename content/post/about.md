@@ -4,6 +4,7 @@ draft = false
 title = "About"
 menu = "main"
 description = "About Me"
+nocomment = true
 +++
 
 **Senior GIS Software Developer working remotely from Boone, NC for Patrick Engineering.**  
