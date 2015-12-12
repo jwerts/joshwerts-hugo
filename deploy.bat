@@ -1,4 +1,5 @@
-@echo off
+setlocal EnableDelayedExpansion
+
 echo Deploying updates to github...
 
 rem build the project
@@ -13,8 +14,9 @@ rem add all changes
 git add -A
 
 rem commit the changes
-set mydate=!date:~10,4!!date:~6,2!/!date:~4,2!
-git commit -m "updated site %mydate%"
+set mydate=%date:~-10,2%-%date:~7,2%-%date:~-4,4%
+set message="Updated Site %mydate%"
+git commit -m %message%
 
 git push origin master
 
