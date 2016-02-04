@@ -5,11 +5,11 @@ draft = true
 description = "Determining ArcGIS Server process (ArcSOC.exe) memory footprint with Powershell"
 +++
 
-For years, I've stubbornly avoided learning Powershell simply relying on batch files for whatever small tasks I need to accomplish, but recently I ran into some batch file hell and decided it would be easier to learn Powershell than to figure out how to do it in a batch file.
+For years, I've stubbornly avoided learning Powershell simply relying on batch files for whatever small tasks I needed to accomplish, but recently I ran into some batch file hell and decided it would be easier to learn Powershell than to figure out how to do it in a batch file.
 
-It turns out Powershell can be pretty useful (and not really that hard to learn).  Pipes are a pretty awesome thing and something they definitely seemed to get right.
+It turns out Powershell can be pretty useful (and not really that hard to learn).  Pipes are an awesome and something they definitely got right.
 
-Anyway, when the need arose to determine the memory footprint of some ArcGIS Server services, Powershell seemed the way to go.  I'm still pretty much a Powershell beginner but here's some pretty useful commands...
+So when the need arose to determine the memory footprint of some ArcGIS Server services, Powershell seemed the way to go.  I'm still pretty much a Powershell beginner but here's some useful commands that got the job done...
 
 #### Get all ArcSOC.exe processes and their memory "working set"
 ```ps1
@@ -22,7 +22,6 @@ Get-WmiObject win32_process |
 
 #### Export those processes to .csv
 ```ps1
-# Get all ArcSOC.exe processes (Export to csv)
 Get-WmiObject win32_process |
   Where-Object {$_.name -eq "ArcSOC.exe"} |
   Sort-Object WS -descending |
