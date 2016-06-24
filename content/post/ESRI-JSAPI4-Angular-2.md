@@ -2,7 +2,7 @@
 date = "2016-05-17T20:23:08-04:00"
 title = "ESRI Javascript API 4 with Angular 2 and Typescript"
 draft = false
-description = "Project setup, unit tests setup, and playing around with Angular 2 (RC 2), ESRI JSAPI 4.0 and Typescript"
+description = "Project setup, unit tests setup, and playing around with Angular 2 (RC 3), ESRI JSAPI 4.0 and Typescript"
 categories = [
   "Angular", "JavaScript", "JSAPI"
 ]
@@ -319,4 +319,5 @@ There will likely be updates to the repo as I continue to explore this concept (
 
 It could really benefit from a final build process.  Note that I've used CDN for most dependencies in index.html for the gh-pages demo to avoid loading local bower and node dependencies to Github.
 
-**Edit 2016-06-16:** Updated to Angular to **2.0.0.RC2**
+**Edit 2016-06-16:** Updated Angular to **2.0.0.RC2**  
+**Edit 2016-06-24:** Updated Angular to **2.0.0.RC3**
