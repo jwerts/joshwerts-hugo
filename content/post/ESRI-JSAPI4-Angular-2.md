@@ -321,3 +321,4 @@ It could really benefit from a final build process.  Note that I've used CDN for
 
 **Edit 2016-06-16:** Updated Angular to **2.0.0.RC2**  
 **Edit 2016-06-24:** Updated Angular to **2.0.0.RC3**
+**Edit 2016-07-05:** Updated Angular to **2.0.0.RC4**
