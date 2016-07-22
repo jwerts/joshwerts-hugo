@@ -28,7 +28,7 @@ def delete_all_fields_except(fc, keep_fields):
     # get a list of fields in the featureclass but not in the list of fields to keep
     # using set.difference()
     
-    delete_fields = list(set(all_fields).difference(keep_fields))
+    delete_fields = list(all_fields.difference(keep_fields))
     
     # delete out all the fields
     arcpy.management.DeleteField(fc, delete_fields)
