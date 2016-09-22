@@ -2,7 +2,7 @@
 date = "2016-05-17T20:23:08-04:00"
 title = "ESRI Javascript API 4 with Angular 2 and Typescript"
 draft = false
-description = "Project setup, unit tests setup, and playing around with Angular 2 (RC 4), ESRI JSAPI 4.0 and Typescript"
+description = "Project setup, unit tests setup, and playing around with Angular 2, ESRI JSAPI 4.0 and Typescript"
 categories = [
   "Angular", "JavaScript", "JSAPI"
 ]
@@ -308,7 +308,7 @@ esriSystem.register(esriLoadConfig.modules, function () {
   System.import('app/main').then(function () {
     console.log('app/main imported');
   }, function (error) {
-    console.log("Esri system error:", error);
+    console.log("System import error:", error);
   });
 });
 ```
@@ -327,3 +327,4 @@ It could really benefit from a final build process.  Note that I've used CDN for
 **Edit 2016-06-24:** Updated Angular to **2.0.0.RC3**  
 **Edit 2016-07-05:** Updated Angular to **2.0.0.RC4**  
 **Edit 2016-07-07:** Updated to use **esri-system-js 1.0 beta** which now preserves esri module names and works correctly with Typescript arcgis-js-api typings.
+**Edit 2016-09-22:** Updated Angular to **2.0.0 final**
