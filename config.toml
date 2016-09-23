@@ -15,12 +15,12 @@ canonifyUrls = true
 [params]
     name = "Josh Werts"
     email = "joshwerts@gmail.com"
-    bio = "<br/><strong>Senior GIS Software Developer working remotely from Boone, NC for Patrick Engineering.</strong><br/><br/>I enjoy working with open source technologies though I’m highly proficient in all things ESRI. I prefer to work in multiple languages and constantly learn new ones, but my day to day work is typically full-stack web development in JavaScript, Python, and C#. I’m searching for a project to learn Go!"
+    bio = "<br/><strong>Senior GIS Software Developer working remotely from Asheville, NC for Patrick Engineering.</strong><br/><br/>I enjoy working with open source technologies though I’m highly proficient in all things ESRI. I prefer to work in multiple languages and constantly learn new ones, but my day to day work is typically full-stack web development in JavaScript, Python, and C#. I’m searching for a project to learn Go!"
     title = "Josh Werts"
     subtitle = "{ 'work': ['gis', 'py', 'js' ...], 'fun': ['bike', 'hike', 'paddle', ...] }"
     description = "some lines of code..."
-    location = "Boone, NC"
-    mapLatLong = "36.216795,-81.674552"
+    location = "Asheville, NC"
+    mapLatLong = "35.5951,-82.5515"
     copyright = "All Rights Reserved"
 
   	# Enable Google Analytics be inserting your tracking code

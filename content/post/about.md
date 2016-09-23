@@ -7,7 +7,7 @@ description = "About Me"
 nocomment = true
 +++
 
-**Senior GIS Software Developer working remotely from Boone, NC for Patrick Engineering.**  
+**Senior GIS Software Developer working remotely from Asheville, NC for Patrick Engineering.**  
 
 I entered software development from a diverse background of civil engineering, land surveying and forestry (GIS emphasis). Other than a few fundamental programming courses taken during my Masters degree, I'm a self-taught developer. In a constantly changing field, I see this as an advantage. I'm passionate about software (especially GIS/spatial/mapping) and truly driven by learning.  
 
