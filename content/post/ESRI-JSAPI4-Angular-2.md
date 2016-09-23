@@ -326,5 +326,5 @@ It could really benefit from a final build process.  Note that I've used CDN for
 **Edit 2016-06-16:** Updated Angular to **2.0.0.RC2**  
 **Edit 2016-06-24:** Updated Angular to **2.0.0.RC3**  
 **Edit 2016-07-05:** Updated Angular to **2.0.0.RC4**  
-**Edit 2016-07-07:** Updated to use **esri-system-js 1.0 beta** which now preserves esri module names and works correctly with Typescript arcgis-js-api typings.
+**Edit 2016-07-07:** Updated to use **esri-system-js 1.0 beta** which now preserves esri module names and works correctly with Typescript arcgis-js-api typings.  
 **Edit 2016-09-22:** Updated Angular to **2.0.0 final**
