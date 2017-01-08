@@ -16,6 +16,8 @@ tags = [
 ]
 +++
 
+<strong>Update 1/8/2017: </strong>I've transitioned to Webpack since this post: [link](/blog/2017/01/08/esri-javascript-api-4-with-angular-2---transition-to-webpack/)
+
 This could really be a post about many things.
 
 First, I'm a believer in client-side MV*.  Second, I'm trying to incorporate better testing into my front-end JS code.  Angular seemed like a natural fit given these 2 primary objectives.  I've done a fair amount of work now with Angular 1 and the ESRI JSAPI 3.x library.  There have been some solid success here, but Dojo `require` throughout the app and especially in unit tests have been a major headache.  You could perhaps mock all dependencies from ESRI in the unit tests or try to keep ESRI in it's own untested sandbox, but both of these strategies seems better in theory than practice.
