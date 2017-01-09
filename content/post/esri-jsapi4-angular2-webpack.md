@@ -21,7 +21,7 @@ tags = [
 Since my [first post](/blog/2016/05/17/esri-javascript-api-4-with-angular-2-and-typescript/) on Angular 2 and the ESRI API, I've transitioned from SystemJS to Webpack which I'm enjoying thoroughly.  
 
 Sample App w/ Webpack setup:  
-**[Demo](http://joshwerts.com/angular2-esri-play)**
+**[Demo](http://joshwerts.com/angular2-esri-play)**  
 **[Repo](https://github.com/jwerts/angular2-esri-play)**  
 
 IMO, Webpack has a few major advantages over SystemJS:
