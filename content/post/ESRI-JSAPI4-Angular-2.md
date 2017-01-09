@@ -12,7 +12,8 @@ tags = [
   "javascript",
   "REST",
   "esri",
-  "angular"
+  "angular",
+  "typescript"
 ]
 +++
 
