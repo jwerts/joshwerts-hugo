@@ -16,21 +16,27 @@ tags = [
 ]
 +++
 
-Since my [first post](/blog/2016/05/17/esri-javascript-api-4-with-angular-2-and-typescript/) on Angular 2 and the ESRI API, I've transitioned from SystemJS to Webpack which I'm enjoying thoroughly.  IMO, Webpack has a few major advantages over SystemJS:  
+Since my [first post](/blog/2016/05/17/esri-javascript-api-4-with-angular-2-and-typescript/) on Angular 2 and the ESRI API, I've transitioned from SystemJS to Webpack which I'm enjoying thoroughly.  
+
+Sample App w/ Webpack setup:  
+**[Demo](http://joshwerts.com/angular2-esri-play)**
+**[Repo](https://github.com/jwerts/angular2-esri-play)**  
+
+IMO, Webpack has a few major advantages over SystemJS:
+
 - Development build step is much faster and lite-server does not bog down with memory leaks (not sure why that happened with the SystemJS setup but lite-server got slower and slower until restarted).  
 - Webpack takes care of bundling code for you (everything expect the ESRI requires).  
   - This setup also bundles each components' html and css in the main bundle.  
 - Feels like less of a hack to use with esri - simply require in each module and that's it.  Setup is simply specifying ESRI as an "external".  Nothing really special there and it just works.  
 - No need for a grunt/gulp step to minimize, etc.  Webpack is pretty comprehensive.  
 
-I've published a new test app with the Webpack configuration:  
-<strong>[REPO HERE](https://github.com/jwerts/angular2-esri-play)</strong>
+**This app is just a map with a custom coordinate display component (bottom left):** 
 
-This app is just a map with a custom coordinate display component:
-![Coordinate component](/img/coordinate_component.png)
+![Coordinate component](/img/map_w_coordinates.png)
 
-I've used a similar webpack configuration to this in a couple production apps over the last several months.  Unit testing w/ this setup and Typescript is finally starting to feel natural (instead of a large very verbose burden w/ es5).  I've found it fairly straightfoward to test domain classes and models w/ business logic where I feel you get the most bang for your buck from testing.  What I haven't quite figured out yet is how to test components (and when it's actually worth the effort).  This project contains a working test for the coordinate component.  It works, but I'm too much of a novice to determine if this is the best way to go about it or not.  If you have an opinion, leave a comment!
+I've used a similar webpack configuration to this in a couple production apps over the last several months.  Unit testing w/ this setup and Typescript is finally starting to feel natural (instead of a large very verbose burden w/ es5).  I've found it fairly straightfoward to test domain classes and models w/ business logic where I feel you get the most bang for your buck from testing.  What I haven't quite figured out yet is how to test components (and when it's actually worth the effort).  This project contains a working test for the coordinate component...  It works, but I'm not yet convinced it's the best way to go about it.  Please comment if you have experience here!
 
+**Coordinate Component test**:
 ```ts
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { DebugElement } from '@angular/core';
@@ -92,5 +98,3 @@ describe('Coordinate', () => {
   });
 });
 ```
-
-More to come...
