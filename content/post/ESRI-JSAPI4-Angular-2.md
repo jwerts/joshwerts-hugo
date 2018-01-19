@@ -2,7 +2,7 @@
 date = "2016-05-17T20:23:08-04:00"
 title = "ESRI Javascript API 4 with Angular 2 and Typescript"
 draft = false
-description = "Project setup, unit tests setup, and playing around with Angular 2 (RC 1), ESRI JSAPI 4.0 and Typescript"
+description = "Project setup, unit tests setup, and playing around with Angular 2, ESRI JSAPI 4.0 and Typescript"
 categories = [
   "Angular", "JavaScript", "JSAPI"
 ]
@@ -12,9 +12,12 @@ tags = [
   "javascript",
   "REST",
   "esri",
-  "angular"
+  "angular",
+  "typescript"
 ]
 +++
+
+<strong>Update 1/8/2017: </strong>I've transitioned to Webpack since this post: [link](/blog/2017/01/08/esri-javascript-api-4-with-angular-2---transition-to-webpack/)
 
 This could really be a post about many things.
 
@@ -43,32 +46,34 @@ So here's our PointsModel (in Typescript).  We've simply wrapped a few `Collecti
 ```ts
 import { Injectable } from '@angular/core';
 
-import { Graphic, Point, GraphicsLayer, Collection } from 'esri';
+import Graphic from 'esri/Graphic';
+import GraphicsLayer from 'esri/layers/GraphicsLayer';
+import Collection from 'esri/core/Collection';
 
 @Injectable()
 export class PointsModel {
-  private _points: Collection = new Collection();
+  private points: Collection = new Collection();
   pointsLayer: GraphicsLayer;
   constructor() {
     this.pointsLayer = new GraphicsLayer();
-    this._points = this.pointsLayer.graphics;
+    this.points = this.pointsLayer.graphics;
   }
   addPoint(pointGraphic: Graphic) {
-    this._points.add(pointGraphic);
+    this.points.add(pointGraphic);
   }
   addPoints(pointsGraphics: Graphic[]) {
-    this._points.addMany(pointsGraphics);
+    this.points.addMany(pointsGraphics);
   }
   getPointGraphics() {
-    return this._points;
+    return this.points;
   }
   clear() {
-    this._points.removeAll();
-  }  
+    this.points.removeAll();
+  }
   getIndexSum() {
-    var sum:number = 0;
-    if (this._points !== null) {
-      this._points.forEach(p => sum += p.attributes.index);
+    let sum = 0;
+    if (this.points !== null) {
+      this.points.forEach(p => sum += p.attributes.index);
     }
     return sum;
   }
@@ -81,7 +86,7 @@ When we add a point to the model, it not only shows up in the map, but also in t
 ```html
 <div>
   <h2>Points!</h2>
-  <p>Index sum: {{pointsModel.getIndexSum()}}
+  <p>Index Sum: {{pointsModel.getIndexSum()}}
   <ul>
     <li *ngFor="let point of points.toArray()">
       <span>{{point.attributes.index}} ({{point.geometry.x | number:'.5-5'}},{{point.geometry.y | number:'.5-5'}})</span>
@@ -94,20 +99,21 @@ When we add a point to the model, it not only shows up in the map, but also in t
 
 Our map binding to our PointsModel (which is just a matter of adding pointsModel.pointsLayer (our GraphicsLayer) to the map):
 ```ts
-import { Injectable, Inject } from '@angular/core';
-import { Map, GraphicsLayer } from 'esri';
+import { Injectable } from '@angular/core';
+
+import Map from 'esri/Map';
+import GraphicsLayer from 'esri/layers/GraphicsLayer';
 
 import { PointsModel } from './points.model';
 
 @Injectable()
 export class MapService {
-  map:Map;
-  pointGraphicsLayer:GraphicsLayer;
-  constructor(@Inject(PointsModel) pointsModel: PointsModel) {
+  map: Map;
+  pointGraphicsLayer: GraphicsLayer;
+  constructor(pointsModel: PointsModel) {
     this.map = new Map({
       basemap: 'topo'
     });
-    console.log("in map.service.ts");
     this.map.add(pointsModel.pointsLayer);
   }
 }
@@ -117,54 +123,57 @@ export class MapService {
 ```ts
 import { PointsModel } from './points.model';
 
-describe('PointsModel tests', function() {
-  var mockPoint = {
+import Graphic from 'esri/Graphic';
+import Point from 'esri/geometry/Point';
+
+describe('PointsModel tests', () => {
+  let mockPointGraphic = new Graphic({
     attributes: {
       index: 1
     },
-    geometry: {
+    geometry: new Point({
       x: 1,
       y: 2,
       spatialReference: {
         wkid: 4326
       }
-    }
-  };
+    })
+  });
 
-  var pointsModel;
-  beforeEach(function() {
+  let pointsModel;
+  beforeEach(() => {
     pointsModel = new PointsModel();
   });
 
-  it('should contstruct it', function() {
+  it('should contstruct it', () => {
     expect(pointsModel).toBeDefined();
     expect(pointsModel.getPointGraphics()).toBeDefined();
   });
 
-  describe("adding and removing points", function() {
-    it('should add a point to collection', function() {
-       pointsModel.addPoint(mockPoint);
-       pointsModel.addPoint(mockPoint);
+  describe('adding and removing points', () => {
+    it('should add a point to collection', () => {
+       pointsModel.addPoint(mockPointGraphic);
+       pointsModel.addPoint(mockPointGraphic);
        expect(pointsModel.getPointGraphics().length).toEqual(2);
     });
 
-    it('should add points to collection', function() {
-      pointsModel.addPoints([mockPoint, mockPoint]);
+    it('should add points to collection', () => {
+      pointsModel.addPoints([mockPointGraphic, mockPointGraphic]);
       expect(pointsModel.getPointGraphics().length).toEqual(2);
     });
 
-    it('should clear points', function() {
-      pointsModel.addPoint(mockPoint);
-      pointsModel.addPoint(mockPoint);
+    it('should clear points', () => {
+      pointsModel.addPoint(mockPointGraphic);
+      pointsModel.addPoint(mockPointGraphic);
       pointsModel.clear();
       expect(pointsModel.getPointGraphics().length).toEqual(0);
     });
   });
 
-  describe('calculations', function() {
-    it('should calculate the sum of the index attributes', function() {
-      pointsModel.addPoints([mockPoint, mockPoint]);
-      var sum = pointsModel.getIndexSum();
+  describe('calculations', () => {
+    it('should calculate the sum of the index attributes', () => {
+      pointsModel.addPoints([mockPointGraphic, mockPointGraphic]);
+      let sum = pointsModel.getIndexSum();
       expect(sum).toEqual(2);
     });
   });
@@ -218,30 +227,31 @@ These are the changes that were added to the karma.conf.js configuration include
     ... angular files, etc.
     // ********* esri load ***********
     // must be able to serve these files for dojo require
-    // NOTE: karma gives a cryptic error when
+    // NOTE: karma gives a cryptic error when 
     // files can't be found  (msg || "").replace is not a function
     { pattern: 'bower_components/dojo/**/*.*', included: false, watched: false },
     { pattern: 'bower_components/dojox/**/*.*', included: false, watched: false },
     { pattern: 'bower_components/dstore/**/*.*', included: false, watched: false },     
     { pattern: 'bower_components/dgrid/**/*.*', included: false, watched: false },
-
+    
     { pattern: 'bower_components/dijit/**/*.*', included: false, watched: false },
-    { pattern: 'bower_components/esri/**/*.*', included: false, watched: false },       
+    { pattern: 'bower_components/esri/**/*.*', included: false, watched: false },    
+    { pattern: 'bower_components/moment/**/*.js', included: false, watched: false },   
 
     // load dojoConfig so dojo knows where to "require" modules from
     'dojoConfigTest.js',
-
+    
     // we need the actual dojo startup file for "requrire" to be defined
     'bower_components/dojo/dojo.js',
-
+    
     // load in esri's systemJs util
     'node_modules/esri-system-js/dist/esriSystem.js',
-
+    
     // load in our array of esri dependencies
     'esriLoadConfig.js',
-
+    
     // bootstrap in the modules using esri-system-js
-    'esriSystemLoadTest.js',
+    'esriSystemLoadTest.js', 
 
     ... more angular files
 ]
@@ -264,11 +274,7 @@ Contains **ALL** esri modules required by the application:
       'esri/geometry/SpatialReference',
       'esri/symbols/SimpleMarkerSymbol',
       'esri/Color'
-    ],
-    outModuleName: 'esri',
-    moduleNameOverrides: {
-      'esri/arcgis/utils': 'arcgisUtils'
-    }
+    ]
   };
 }(window))
 ```
@@ -280,11 +286,11 @@ Called by Karma to pre-load the esri modules before the tests run.
 ```js
 // load esri modules needed by this application
 // into a System.js module called esri
+start = performance.now();
 esriSystem.register(esriLoadConfig.modules, function () {
-  console.log('loaded esri modules');
-}, {
-  outModuleName: esriLoadConfig.outModuleName,
-  moduleNameOverrides: esriLoadConfig.moduleNameOverrides
+  end = performance.now();
+  time = end - start;
+  console.log('Loaded esri modules', time / 1000.0);
 });
 ```
 
@@ -295,26 +301,33 @@ Used in the browser code (called from index.html) to load in the esri modules AN
 ```js
 // load esri modules needed by this application
 // into a System.js module called esri
+console.log("Loading esri modules: ", esriLoadConfig.modules);
+start = performance.now();
 esriSystem.register(esriLoadConfig.modules, function () {
   // then bootstrap application
-  console.log('loaded esri modules');
+  end = performance.now();
+  time = end - start;
+  console.log('Loaded esri modules', time / 1000.0);
   System.import('app/main').then(function () {
     console.log('app/main imported');
   }, function (error) {
-    console.log("Esri system error:", error);
+    console.log("System import error:", error);
   });
-}, {
-  outModuleName: esriLoadConfig.outModuleName,
-  moduleNameOverrides: esriLoadConfig.moduleNameOverrides
 });
 ```
 
 ## Conclusion
 
-This is **highly experimental** and there's **a lot of moving parts**, but it's nice to know this is possible.  I've left out a lot but the full repo's here:
+~~This is **highly experimental** and there's **a lot of moving parts**, but it's nice to know this is possible.~~ This is getting closer to production quality.  I've left out a lot but the full repo's here:
 
 https://github.com/jwerts/jsapi4-angular2
 
 There will likely be updates to the repo as I continue to explore this concept (and learn Angular 2... and learn Typescript).
 
 It could really benefit from a final build process.  Note that I've used CDN for most dependencies in index.html for the gh-pages demo to avoid loading local bower and node dependencies to Github.
+
+**Edit 2016-06-16:** Updated Angular to **2.0.0.RC2**  
+**Edit 2016-06-24:** Updated Angular to **2.0.0.RC3**  
+**Edit 2016-07-05:** Updated Angular to **2.0.0.RC4**  
+**Edit 2016-07-07:** Updated to use **esri-system-js 1.0 beta** which now preserves esri module names and works correctly with Typescript arcgis-js-api typings.  
+**Edit 2016-09-22:** Updated Angular to **2.0.0 final**

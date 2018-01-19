@@ -18,6 +18,6 @@ set mydate=%date:~-10,2%-%date:~7,2%-%date:~-4,4%
 set message="Updated Site %mydate%"
 git commit -m %message%
 
-git push origin master
+git push -f origin master
 
 cd ..

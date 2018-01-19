@@ -36,7 +36,7 @@ def project(source_fc, out_projected_fc, spatial_reference):
   arcpy.management.CreateFeatureclass(path, name,
                                       arcpy.Describe(source_fc).shapeType,
                                       template=source_fc,
-                                      spatial_reference=web_mercator)
+                                      spatial_reference=spatial_reference)
 
   # specify copy of all fields from source to destination
   fields = ["Shape@"] + [f.name for f in arcpy.ListFields(source_fc) if not f.required]
